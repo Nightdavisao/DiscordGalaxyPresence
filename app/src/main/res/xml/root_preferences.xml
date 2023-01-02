@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Discord settings">
+
+        <EditTextPreference
+            app:key="discord_token"
+            app:title="User token"
+            app:summary="Needed to send the presence to Discord" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
