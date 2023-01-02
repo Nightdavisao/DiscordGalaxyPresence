@@ -24,18 +24,25 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-class GameDetectionService: AccessibilityService() {
+class GameDetectionService : AccessibilityService() {
     companion object {
         const val TAG = "GameDetectionService"
+
         // don't trust the IDE. this regex is actually all right, the character escape ISN'T redundant. don't mess with it
         val TOP_APP_REGEX = "topApp=ActivityRecord\\{(.*)\\}".toRegex()
     }
+
     private val handler = Handler(Looper.getMainLooper())
-    private val client = OkHttpClient()
+
     private var preferencesManager: SharedPreferences? = null
+    private var discordClient: DiscordClient? = null
 
     override fun onServiceConnected() {
+        // ensure we have shell access
+        Shell.getShell()
         preferencesManager = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        preferencesManager?.registerOnSharedPreferenceChangeListener(this::onSharedPreferenceChangeListener)
+
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
@@ -43,31 +50,22 @@ class GameDetectionService: AccessibilityService() {
         this.serviceInfo = info
     }
 
-    private fun updateDiscordPresence(packageName: String, status: String) {
-        thread {
-            val authorizationToken = preferencesManager?.getString("discord_token", null)
-            if (!authorizationToken.isNullOrBlank()) {
-                val payload = JsonWriter.string().`object`()
-                    .value("package_name", packageName)
-                    .value("update", status)
-                    .end()
-                    .done()
-                Log.d(TAG, payload)
-
-                val request = Request.Builder()
-                    .url("https://discord.com/api/v6/presences")
-                    .post(payload.toRequestBody("application/json".toMediaType()))
-                    .addHeader("Authorization", authorizationToken)
-                    .build()
-
-                val response = client.newCall(request).execute()
-
-                Log.d(TAG, "presence sent, status code: ${response.code}")
+    private fun onSharedPreferenceChangeListener(
+        sharedPreferences: SharedPreferences,
+        key: String
+    ) {
+        if (key == "discord_token") {
+            val token = sharedPreferences.getString(key, null)
+            discordClient = if (token != null) {
+                Log.d(TAG, "onSharedPreferenceChangeListener: user token was changed")
+                DiscordClient(token)
             } else {
-                Log.d(TAG, "discord token is NULL or BLANK")
+                Log.d(TAG, "onSharedPreferenceChangeListener: user token is null")
+                null
             }
         }
     }
+
     // this doesn't actually check if the application is in foreground
     // i know no better way to do this.
     private fun rootIsApplicationInForeground(packageName: String): Boolean {
@@ -117,20 +115,29 @@ class GameDetectionService: AccessibilityService() {
     private fun updateTaskTimer(runningGame: ApplicationInfo) {
         handler.removeCallbacksAndMessages(null)
         val delayMillis = TimeUnit.MINUTES.toMillis(1)
-        val runnable = object: Runnable {
+        val runnable = object : Runnable {
             override fun run() {
                 if (isApplicationInForeground(runningGame.packageName)) {
                     Log.d(TAG, "handler.postDelayed: keeping alive our presence status")
-                    updateDiscordPresence(runningGame.processName, "UPDATE")
+                    discordClient?.sendGalaxyPresence(runningGame.processName, "UPDATE")
                     handler.postDelayed(this, delayMillis)
                     return
                 }
 
                 Log.d(TAG, "stopping the presence because the last app used is not the game")
-                updateDiscordPresence(runningGame.packageName, "STOP")
+                discordClient?.sendGalaxyPresence(runningGame.packageName, "STOP")
             }
         }
         handler.postDelayed(runnable, delayMillis)
+    }
+
+    fun isPackageAGame(packageName: String): Boolean {
+        val applicationInfo = baseContext.packageManager.getApplicationInfo(packageName, 0)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            applicationInfo.category == ApplicationInfo.CATEGORY_GAME
+        } else {
+            applicationInfo.flags.and(ApplicationInfo.FLAG_IS_GAME) == ApplicationInfo.FLAG_IS_GAME
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -138,12 +145,10 @@ class GameDetectionService: AccessibilityService() {
             try {
                 val applicationInfo =
                     baseContext.packageManager.getApplicationInfo(event.packageName.toString(), 0)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if (applicationInfo.category == ApplicationInfo.CATEGORY_GAME || applicationInfo.category == ApplicationInfo.FLAG_IS_GAME) {
-                        Log.d(TAG, "an actual game! package name: ${event.packageName}")
-                        updateDiscordPresence(applicationInfo.processName, "START")
-                        updateTaskTimer(applicationInfo)
-                    }
+                if (isPackageAGame(event.packageName.toString())) {
+                    Log.d(TAG, "an actual game! package name: ${event.packageName}")
+                    discordClient?.sendGalaxyPresence(applicationInfo.processName, "START")
+                    updateTaskTimer(applicationInfo)
                 }
             } catch (e: NameNotFoundException) {
                 Log.d(TAG, "failed to query package")

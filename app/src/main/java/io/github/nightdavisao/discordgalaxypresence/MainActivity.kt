@@ -9,7 +9,6 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.topjohnwu.superuser.Shell
-import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
     companion object {
