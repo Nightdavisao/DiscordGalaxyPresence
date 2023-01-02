@@ -23,7 +23,7 @@ class GameDetectionService : AccessibilityService() {
         const val TAG = "GameDetectionService"
 
         // don't trust the IDE. this regex is actually all right, the character escape ISN'T redundant. don't mess with it
-        val TOP_APP_REGEX = "topApp=ActivityRecord\\{(.*)\\}".toRegex()
+        val IS_ON_SCREEN_REGEX = "isOnScreen=(true|false)".toRegex()
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -64,15 +64,29 @@ class GameDetectionService : AccessibilityService() {
         }
     }
 
-    // this doesn't actually check if the application is in foreground
-    // i know no better way to do this.
     private fun rootIsApplicationInForeground(packageName: String): Boolean {
         val result = Shell.cmd("dumpsys window windows").exec()
-        val output = result.out.joinToString("\n")
+        val output = result.out
 
-        // we will be extracting all the open activities.
-        val matchResults = TOP_APP_REGEX.findAll(output)
-        return matchResults.any { it.groupValues[1].split(" ")[2].substringBefore("/") == packageName }
+        var isInWindow = false
+        for (line in output) {
+            val trimmed = line.trim()
+            if (trimmed.startsWith("Window #")) {
+                if (!isInWindow) {
+                    val substring = trimmed.substringBefore("/").substringAfterLast(" ")
+                    if (substring == packageName) {
+                        isInWindow = true
+                    }
+                } else {
+                    isInWindow = false
+                }
+            }
+            if (isInWindow) {
+                val match = IS_ON_SCREEN_REGEX.find(trimmed)?.groupValues?.get(1)
+                if (match != null) return match == "true"
+            }
+        }
+        return false
     }
 
     private fun isApplicationInForeground(packageName: String): Boolean {
