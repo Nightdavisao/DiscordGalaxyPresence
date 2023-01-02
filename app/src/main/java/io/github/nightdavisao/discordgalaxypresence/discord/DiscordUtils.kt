@@ -1,4 +1,4 @@
-package io.github.nightdavisao.discordgalaxypresence
+package io.github.nightdavisao.discordgalaxypresence.discord
 
 import com.grack.nanojson.JsonParser
 import com.grack.nanojson.JsonWriter
@@ -9,19 +9,17 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 
 object DiscordUtils {
-    class CaptchaException(siteKey: String): Exception()
-    class MFAException(ticket: String): Exception()
+    class CaptchaException(val siteKey: String): Exception()
+    class MFAException(val ticket: String): Exception()
     class EmptyBodyException: Exception()
-    class UnexpectedStatusCode(code: Int): Exception()
+    class UnexpectedStatusCode(val code: Int): Exception()
 
     private val client = OkHttpClient()
 
     fun getTokenWithCredentials(login: String, password: String, captchaKey: String?): String? {
         val payload = JsonWriter.string().`object`()
             .value("captcha_key", captchaKey)
-            .value("gift_code_sku_id")
             .value("login", login)
-            .value("login_source")
             .value("password", password)
             .value("undelete", false) // ?
             .end()
@@ -60,8 +58,6 @@ object DiscordUtils {
     fun getTokenWithTotp(code: String, ticket: String): String? {
         val payload = JsonWriter.string().`object`()
             .value("code", code)
-            .value("gift_code_sku_id")
-            .value("login_source")
             .value("ticket", ticket)
             .end()
             .done()

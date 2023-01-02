@@ -1,4 +1,4 @@
-package io.github.nightdavisao.discordgalaxypresence
+package io.github.nightdavisao.discordgalaxypresence.discord
 
 import android.util.Log
 import com.grack.nanojson.JsonWriter

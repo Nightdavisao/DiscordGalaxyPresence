@@ -1,10 +1,17 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="Discord settings">
 
         <EditTextPreference
+            android:defaultValue="Default value"
+            android:key="login_with_credentials"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Login with credentials" />
+        <EditTextPreference
             app:key="discord_token"
-            app:title="User token"
+            app:title="Set user token"
             app:summary="Needed to send the presence to Discord" />
 
     </PreferenceCategory>

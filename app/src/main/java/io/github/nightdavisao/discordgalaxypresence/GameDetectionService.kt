@@ -2,7 +2,6 @@ package io.github.nightdavisao.discordgalaxypresence
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.annotation.SuppressLint
 import android.app.usage.UsageEvents.Event
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -15,14 +14,9 @@ import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.preference.PreferenceManager
-import com.grack.nanojson.JsonWriter
 import com.topjohnwu.superuser.Shell
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.util.*
+import io.github.nightdavisao.discordgalaxypresence.discord.DiscordClient
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
 
 class GameDetectionService : AccessibilityService() {
     companion object {
@@ -42,6 +36,10 @@ class GameDetectionService : AccessibilityService() {
         Shell.getShell()
         preferencesManager = PreferenceManager.getDefaultSharedPreferences(applicationContext)
         preferencesManager?.registerOnSharedPreferenceChangeListener(this::onSharedPreferenceChangeListener)
+        val userToken = preferencesManager?.getString("discord_token", null)
+        if (userToken != null) {
+            discordClient = DiscordClient(userToken)
+        }
 
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
