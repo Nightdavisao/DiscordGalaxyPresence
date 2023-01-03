@@ -22,7 +22,8 @@ class MFACodeDialogFragment : DialogFragment() {
             val builder = AlertDialog.Builder(it)
             val editText = EditText(this.context)
             editText.inputType = InputType.TYPE_CLASS_NUMBER
-            builder.setMessage("MFA code")
+            builder.setTitle("MFA code")
+                .setMessage("Enter your two-factor authentication code")
                 .setView(editText)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     lifecycleScope.launch {

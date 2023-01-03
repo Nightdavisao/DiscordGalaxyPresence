@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import android.util.Patterns
-import io.github.nightdavisao.discordgalaxypresence.discord.DiscordUtils
 import io.github.nightdavisao.discordgalaxypresence.data.LoginRepository
 import io.github.nightdavisao.discordgalaxypresence.data.Result
 
@@ -23,10 +22,8 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
         val result = loginRepository.login(username, password)
 
         if (result is Result.Success) {
-            _loginResult.value =
-                LoginResult(success = LoggedInUserView(displayName = result.data.displayName))
+            _loginResult.value = LoginResult(success = result.data)
         } else if (result is Result.Error) {
-
             _loginResult.value = LoginResult(error = R.string.login_failed, exception = result.exception)
         }
     }

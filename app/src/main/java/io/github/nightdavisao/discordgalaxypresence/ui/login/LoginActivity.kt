@@ -9,7 +9,6 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -18,7 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.hcaptcha.sdk.HCaptcha
 import com.hcaptcha.sdk.HCaptchaConfig
+import io.github.nightdavisao.discordgalaxypresence.GameDetectionService
 import io.github.nightdavisao.discordgalaxypresence.MFACodeDialogFragment
+import io.github.nightdavisao.discordgalaxypresence.R
 import io.github.nightdavisao.discordgalaxypresence.databinding.ActivityLoginBinding
 import io.github.nightdavisao.discordgalaxypresence.discord.DiscordUtils
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,27 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var preferenceManager: SharedPreferences
     private val hCaptcha = HCaptcha.getClient(this)
+
+    private fun handleMFAToken(ticket: String) {
+        val mfaDialog = MFACodeDialogFragment()
+        mfaDialog.setOkCallback { code ->
+            try {
+                withContext(Dispatchers.IO) {
+                    val mfaToken = DiscordUtils.getTokenWithTotp(
+                        code,
+                        ticket
+                    )
+                    if (mfaToken != null) {
+                        changeDiscordToken(mfaToken)
+                        showLoginSuccess()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        mfaDialog.show(this.supportFragmentManager, "dialog")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,26 +91,8 @@ class LoginActivity : AppCompatActivity() {
             loading.visibility = View.GONE
             if (loginResult.exception != null) {
                 if (loginResult.exception is DiscordUtils.MFAException) {
-                    val mfaDialog = MFACodeDialogFragment()
-                    mfaDialog.setOkCallback { code ->
-                        try {
-                            withContext(Dispatchers.IO) {
-                                val mfaToken = DiscordUtils.getTokenWithTotp(
-                                    code,
-                                    loginResult.exception.ticket
-                                )
-                                preferenceManager.edit()
-                                    .putString("discord_token", mfaToken)
-                                    .apply()
-                                finish()
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    mfaDialog.show(this.supportFragmentManager, "dialog")
-                }
-                if (loginResult.exception is DiscordUtils.CaptchaException) {
+                    handleMFAToken(loginResult.exception.ticket)
+                } else if (loginResult.exception is DiscordUtils.CaptchaException) {
                     hCaptcha.addOnSuccessListener { tokenResponse ->
                         try {
                             runBlocking {
@@ -101,47 +105,26 @@ class LoginActivity : AppCompatActivity() {
                                     )
                                 }
                                 if (token != null) {
-                                    preferenceManager.edit()
-                                        .putString("discord_token", token)
-                                        .apply()
-                                    finish()
+                                    changeDiscordToken(token)
+                                    showLoginSuccess()
                                 }
                             }
                         } catch (e: DiscordUtils.MFAException) {
-                            val mfaDialog = MFACodeDialogFragment()
-                            mfaDialog.setOkCallback { code ->
-                                try {
-                                    withContext(Dispatchers.IO) {
-                                        val mfaToken = DiscordUtils.getTokenWithTotp(
-                                            code,
-                                            e.ticket
-                                        )
-                                        Log.d(TAG, "onCreate: fresh new token $mfaToken")
-                                        preferenceManager.edit()
-                                            .putString("discord_token", mfaToken)
-                                            .apply()
-                                        finish()
-                                    }
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
-                            mfaDialog.show(this.supportFragmentManager, "dialog")
+                            handleMFAToken(e.ticket)
                         }
                     }
                     hCaptcha.setup(HCaptchaConfig.builder()
                         .siteKey(loginResult.exception.siteKey)
                         .build())
                         .verifyWithHCaptcha()
+                } else {
+                    showLoginFailed(R.string.login_failed)
                 }
             }
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
-            }
+
             if (loginResult.success != null) {
-                updateUiWithUser()
-                setResult(Activity.RESULT_OK)
-                finish()
+                changeDiscordToken(loginResult.success)
+                showLoginSuccess()
             }
         })
 
@@ -181,13 +164,21 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUiWithUser() {
+    private fun changeDiscordToken(token: String) {
+        preferenceManager.edit()
+            .putString("discord_token", token)
+            .apply()
+        GameDetectionService.instance?.changeDiscordToken(token)
+    }
 
+    private fun showLoginSuccess() {
         Toast.makeText(
             applicationContext,
             "You're now logged in",
             Toast.LENGTH_LONG
         ).show()
+        setResult(Activity.RESULT_OK)
+        finish()
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {

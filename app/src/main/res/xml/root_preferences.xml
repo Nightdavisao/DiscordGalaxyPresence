@@ -13,6 +13,9 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:key="miui_prefdisclaimer" android:title="MIUI" app:isPreferenceVisible="false">
+        <Preference app:summary="@string/miui_disclaimer"/>
+    </PreferenceCategory>
     <PreferenceCategory app:title="App permissions">
         <Preference
             android:key="accessibility_permission"

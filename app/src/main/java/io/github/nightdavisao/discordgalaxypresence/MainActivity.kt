@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.topjohnwu.superuser.Shell
@@ -93,11 +94,15 @@ class MainActivity : AppCompatActivity() {
             accessibilityPreference = findPreference("accessibility_permission")
             usageAccessPermission = findPreference("usage_access_permission")
             rootPermission = findPreference("root_permission")
+            val miuiDisclaimer = findPreference<PreferenceCategory>("miui_prefdisclaimer")
 
             loginWithPreferences?.setOnPreferenceClickListener {
                 val intent = Intent(this.context, LoginActivity::class.java)
                 startActivity(intent)
                 return@setOnPreferenceClickListener false
+            }
+            if (DeviceUtils.isMiUi()) {
+                miuiDisclaimer?.isVisible = true
             }
             updatePermissionsSummary()
         }

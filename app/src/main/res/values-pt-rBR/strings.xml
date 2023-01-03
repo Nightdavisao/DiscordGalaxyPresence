@@ -14,4 +14,5 @@
     <string name="usage_access_permission">Permissão de acesso de uso</string>
     <string name="root_permission">Permissão de root</string>
     <string name="accessibility_permission">Permissão de acessibilidade</string>
+    <string name="miui_disclaimer">A otimização agressiva de bateria da MIUI costuma ser um empecilho em relação aos serviços em segundo plano. Não é certo que este aplicativo funcione no seu dispositivo.</string>
 </resources>

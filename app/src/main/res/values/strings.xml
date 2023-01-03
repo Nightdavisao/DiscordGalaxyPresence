@@ -39,4 +39,5 @@
     <string name="login_with_credentials">Login with credentials</string>
     <string name="set_user_token">Set user token</string>
     <string name="set_user_token_summary">Only change this option if you know what a user token is. If you don\'t, please DON\'T change or show whatever stuff it reveals to anyone.</string>
+    <string name="miui_disclaimer">MIUI\'s aggressive battery optimization is often a hurdle regarding background services. It\'s not sure that this app will work on your device.</string>
 </resources>
