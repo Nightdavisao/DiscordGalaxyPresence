@@ -5,12 +5,23 @@
 
         <Preference
             android:key="login_with_credentials"
-            android:title="Login with credentials" />
+            android:title="@string/login_with_credentials" />
         <EditTextPreference
             app:key="discord_token"
-            app:title="Set user token"
-            app:summary="Needed to send the presence to Discord" />
+            app:title="@string/set_user_token"
+            app:summary="@string/set_user_token_summary" />
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="App permissions">
+        <Preference
+            android:key="accessibility_permission"
+            app:title="@string/accessibility_permission"/>
+        <Preference
+            android:key="usage_access_permission"
+            app:title="@string/usage_access_permission"/>
+        <Preference
+            android:key="root_permission"
+            app:title="@string/root_permission" />
+    </PreferenceCategory>
 </PreferenceScreen>

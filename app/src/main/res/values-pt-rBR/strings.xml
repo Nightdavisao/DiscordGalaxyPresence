@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DiscordGalaxyPresence</string>
+    <string name="root_permission_granted">Esse app está usando o metódo root</string>
+    <string name="root_permission_denied">Esse app está usando o metódo sem root</string>
+    <string name="usage_access_permission_denied">Não permitido. Clique aqui para permitir</string>
+    <string name="usage_access_permission_granted">Essa permissão foi concedida</string>
+    <string name="accessibility_permission_denied">Não está ativado. Clique aqui para ativar</string>
+    <string name="accessibility_permission_granted">Serviço de accessibilidade está ativado.</string>
+    <string name="login_with_credentials">Logar com credenciais</string>
+    <string name="set_user_token">Definir token de usuário</string>
+    <string name="set_user_token_summary">Apenas mude essa opção se você sabe o que é token de usuário. Se não, por favor NÃO mude ou mostre quaisquer conteúdo que é revelado quando clicado.</string>
+    <string name="login_failed">Login falhou</string>
+    <string name="usage_access_permission">Permissão de acesso de uso</string>
+    <string name="root_permission">Permissão de root</string>
+    <string name="accessibility_permission">Permissão de acessibilidade</string>
+</resources>
