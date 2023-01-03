@@ -3,11 +3,8 @@
 
     <PreferenceCategory app:title="Discord settings">
 
-        <EditTextPreference
-            android:defaultValue="Default value"
+        <Preference
             android:key="login_with_credentials"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
             android:title="Login with credentials" />
         <EditTextPreference
             app:key="discord_token"

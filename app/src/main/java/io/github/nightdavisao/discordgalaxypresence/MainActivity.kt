@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.preference.EditTextPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.topjohnwu.superuser.Shell
@@ -48,12 +49,11 @@ class MainActivity : AppCompatActivity() {
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
-            val loginWithPreferences = findPreference<EditTextPreference>("login_with_credentials")
+            val loginWithPreferences = findPreference<Preference>("login_with_credentials")
             loginWithPreferences?.setOnPreferenceClickListener {
-
                 val intent = Intent(this.context, LoginActivity::class.java)
                 startActivity(intent)
-                return@setOnPreferenceClickListener true
+                return@setOnPreferenceClickListener false
             }
         }
     }
